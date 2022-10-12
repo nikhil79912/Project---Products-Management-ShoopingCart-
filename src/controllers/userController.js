@@ -332,8 +332,6 @@ const updateUser = async function (req, res) {
         let userAddress = await userModel.findById(userId)
         filter.address = userAddress.address
 
-        // JSON.parse(undefined/emptyString) throws "Internal Server Error"
-
         if (address) {
             // if(!validation.isValidObject(address)){
             //     return res.status(400).send({ status: false, message: "please provide address in proper format" })
