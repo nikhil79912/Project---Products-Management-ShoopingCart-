@@ -303,6 +303,12 @@ const updateUser = async function (req, res) {
             filter.email = email
         }
 
+        if (data.hasOwnProperty("profileImage")) {
+            if (!files.length) {
+                return res.status(400).send({ status: false, message: "please select some file" })
+            }
+        }
+
         if (data.hasOwnProperty("phone")) {
             if (!validation.isValidPhone(phone)) {
                 return res.status(400).send({ status: false, message: "please provide only 10 digit number" })
@@ -393,9 +399,6 @@ const updateUser = async function (req, res) {
         if (files && files.length > 0) {
             let uploadedFileURL = await uploadFile(files[0])
             filter.profileImage = uploadedFileURL
-        }
-        else {
-            return res.status(400).send({ status: false, message: "please select some file" })
         }
 
         const update = await userModel.findOneAndUpdate(
