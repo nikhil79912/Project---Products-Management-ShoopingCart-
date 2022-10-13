@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 
-// //-------------------------request body validation------------------------------------
 
 const isValidObjectId = function (objectId) {
     return mongoose.Types.ObjectId.isValid(objectId)
