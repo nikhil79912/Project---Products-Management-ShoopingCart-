@@ -1,3 +1,5 @@
+//-------------------------------------------------importing module---------------------------------------------------
+
 const mongoose = require('mongoose')
 const userModel = require("../models/userModel")
 const bcrypt = require("bcrypt");
@@ -6,7 +8,7 @@ const aws = require('aws-sdk')
 const jwt = require('jsonwebtoken')
 
 
-
+//-----------------------------------------------------AWS---------------------------------------------------------------
 aws.config.update({
     accessKeyId: "AKIAY3L35MCRZNIRGT6N",
     secretAccessKey: "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",
@@ -37,7 +39,7 @@ let uploadFile = async (file) => {
     })
 }
 
-
+//-------------------------------------------------create User/ post"register" ---------------------------------------------------
 const createUser = async function (req, res) {
 
     let data = req.body;
@@ -101,9 +103,6 @@ const createUser = async function (req, res) {
     if (!validation.isValidPincode(address.shipping.pincode))
         return res.status(400).send({ status: false, message: "PIN code should contain 6 digits only " })
 
-
-
-
     if (!validation.isValid(address.billing.street))
         return res.status(400).send({ status: false, message: "street field is required or not valid" })
 
@@ -116,31 +115,29 @@ const createUser = async function (req, res) {
     if (!validation.isValidPincode(address.billing.pincode))
         return res.status(400).send({ status: false, message: "PIN code should contain 6 digits only " })
 
-
+    //===========================================HASHING PASSWORD==============================================
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(data.password, salt)
     data.password = hashedPassword
-
-
-    let createData = await userModel.create(data)
-    console.log(createData)
-
-
-
-    let files = req.files
-    if (files && files.length > 0) {
-        let uploadedFileURL = await uploadFile(files[0])
-
-        createData.profileImage = uploadedFileURL
-        console.log(uploadedFileURL)
-
-        res.send({ status: true, data: createData })
-
+    
+    //===========================================UPLOADING PROFILE IMAGE==============================================
+    let file = req.files
+    if (file && file.length > 0) 
+    {
+    //upload to s3 and get the uploaded link
+    // res.send the link back to frontend/postman
+    let uploadedFileURL = await uploadFile(file[0])
+    data['profileImage'] = uploadedFileURL
+    
     }
+  //===========================================CREATING DOCUMENT==============================================
+  let createData = await userModel.create(data)
+  res.send({status:true,data:createData})
 
-}
+}   
 
 
+//-------------------------------------------------login User/post(login) ------------------------------------------
 
 const loginUser = async function (req, res) {
     try {
@@ -182,12 +179,12 @@ const loginUser = async function (req, res) {
                 message: `Password is required`
             });
         }
-        // if (!validator.isValidPassword(password)) {
-        //   return res.status(400).send({
-        //     status: false,
-        //     message: "Please enter a valid password"
-        //   });
-        // }
+        if (!validation.isValidPassword(password)) {
+          return res.status(400).send({
+            status: false,
+            message: "Please enter a valid password"
+          });
+        }
 
         let user = await userModel.findOne({ email: email })
         if (!user) {
@@ -197,6 +194,7 @@ const loginUser = async function (req, res) {
         let userPass = user.password
         let checkPass = await bcrypt.compare(password, userPass)
         if (!checkPass) { return res.status(400).send({ status: false, message: "Invalid password" }) }
+        
         //---------------- token creation--------------
 
         let token = jwt.sign(
@@ -206,7 +204,7 @@ const loginUser = async function (req, res) {
                 organisation: "FunctionUp"
 
             },
-            "functionup-plutonium-blogging-Project1-secret-key", { expiresIn: '1h' }
+            "functionup-plutonium-productsManagement-Project66-secret-key", { expiresIn: '1h' }
         );
 
         res.send({ status: true, msg: "login successful", data: { token: token, userId: user._id } });
@@ -217,7 +215,7 @@ const loginUser = async function (req, res) {
 };
 
 
-//-----------------------------------------------------------------------------------
+//------------------------------------------ get(/user/:userId/profile)-----------------------------------------
 
 const getUser = async function (req, res) {
     try {
@@ -233,7 +231,7 @@ const getUser = async function (req, res) {
         if (!user)
             return res.status(400).send({ status: false, message: "user does not exist" })
 
-        return res.status(200).send({ status: true, msssage: "user profile Details", data: user })
+            return res.status(200).send({ status: true, msssage: "user profile Details", data: user })
 
 
 
@@ -243,7 +241,7 @@ const getUser = async function (req, res) {
 
 }
 
-
+//------------------------------------------updateUser put("/user/:userId/profile")-----------------------------------------
 
 const updateUser = async function (req, res) {
     try {
@@ -256,11 +254,6 @@ const updateUser = async function (req, res) {
         if (!checkUserId) {
             return res.status(404).send({ status: false, message: "User ID not found, please user correct user ID " })
         }
-
-        // const tokenUserId = (req.decodedToken.userId).toString()
-        // if(userId !== tokenUserId){
-        //     return res.status(400).send({ status: false, message: "Person is not authorised" })
-        // }
 
         let data = { ...req.body }
         let files = req.files
