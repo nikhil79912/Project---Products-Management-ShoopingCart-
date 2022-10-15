@@ -10,7 +10,9 @@ const isValidRequestBody = function (requestBody) {
 }
 
 const isValidObject = function (value) {
-    return (typeof value === 'object')
+    if (typeof value === 'object')
+    return true
+    return false
 }
 
 const isValid = function (value) {
@@ -31,6 +33,12 @@ const isValidEmail = function (email) {
     return regex.test(email)
 }
 
+// const isValidImage = function (value) {
+//     const regex = /^([a-zA-Z0-9\s_\\.\-:])+(.jpg|.jpeg|.gif|.png|.bmp)$/
+//     if (typeof value !== "string") return false
+//     if (regex.test(value) === false) return false
+//     return true
+// }
 const isValidPhone = function (mobileNumber) {
     const regex = /^(\+91[\-\s]?)?[0]?(91)?[6789]\d{9}$/
     return regex.test(mobileNumber)

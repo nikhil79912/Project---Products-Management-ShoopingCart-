@@ -48,24 +48,56 @@ const createUser = async function (req, res) {
 
     if (!validation.isValidRequestBody(data))
         return res.status(400).send({ status: false, msg: "please provide  details" })
-
+    
+    //============================================NAME====================================================    
     if (!validation.isValid(fname))
         return res.status(400).send({ status: false, message: "first name is required or not valid" })
+
+        if (!validation.isValidName(fname))
+        return res.status(400).send({ status: false, message: "first name is not valid" })
+
 
     if (!validation.isValid(lname))
         return res.status(400).send({ status: false, message: "last name is required or not valid" })
 
+    if (!validation.isValidName(fname))
+        return res.status(400).send({ status: false, message: "last name is not valid" })
+
     //============================================EMAIL====================================================
 
     if (!validation.isValid(email))
-        return res.status(400).send({ status: false, message: "email is required or not valid" })
+        return res.status(400).send({ status: false, message: "email is required " })
 
     if (!validation.isValidEmail(email))
         return res.status(400).send({ status: false, message: "email is not valid" })
 
     let checkEmail = await userModel.findOne({ email: email })
 
-    if (checkEmail) return res.status(409).send({ status: false, msg: "email already exist" })
+    if (checkEmail) return res.status(409).send({ status: false, msg: "This email has already been registered" })
+
+     //===========================================UPLOADING PROFILE IMAGE==============================================
+     let file = req.files
+     if (file && file.length > 0) 
+     {
+     //upload to s3 and get the uploaded link
+     // res.send the link back to frontend/postman
+     let uploadedFileURL = await uploadFile(file[0])
+     data['profileImage'] = uploadedFileURL
+     
+     if(!validation.isValidImage(uploadedFileURL)){return res.status(400).send({ status: false, message: "please provide profile Image in jpg,png,jpeg format" })}}
+       
+     else{return res.status(400).send({ status: false, message: "please select a profile Image" })}
+
+    //===========================================PHONE=================================================
+    if (!validation.isValid(phone))
+        return res.status(400).send({ status: false, message: "phone No. is required " })
+
+    if (!validation.isValidPhone(phone))
+        return res.status(400).send({ status: false, message: "Please provide a valid Indian phone No." })
+
+    let checkPhone = await userModel.findOne({ phone: phone })
+
+    if (checkPhone) return res.status(409).send({ status: false, msg: "This phone No. has already been registered" })
 
     //==========================================PASSWORD================================================
 
@@ -75,21 +107,11 @@ const createUser = async function (req, res) {
     if (!validation.isValidPassword(password))
         return res.status(400).send({ status: false, message: "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase" })
 
-    //===========================================PHONE=================================================
-    if (!validation.isValid(phone))
-        return res.status(400).send({ status: false, message: "phone is required or not valid" })
-
-    if (!validation.isValidPhone(phone))
-        return res.status(400).send({ status: false, message: "phone number is not valid" })
-
-    let checkPhone = await userModel.findOne({ phone: phone })
-
-    if (checkPhone) return res.status(409).send({ status: false, msg: "Phone already exist" })
-
-    //===========================================ADDRESS==============================================
+    
+   //===========================================ADDRESS==============================================
     if (!address) return res.status(400).send({ status: false, msg: "address requried" })
     // var addresss = JSON.parse(address)
-
+    
 
     if (!validation.isValid(address.shipping.street))
         return res.status(400).send({ status: false, message: "street field is required or not valid" })
@@ -102,6 +124,8 @@ const createUser = async function (req, res) {
 
     if (!validation.isValidPincode(address.shipping.pincode))
         return res.status(400).send({ status: false, message: "PIN code should contain 6 digits only " })
+
+    if (!address.billing)return res.status(400).send({ status: false, message: "billing field is required or not valid" })
 
     if (!validation.isValid(address.billing.street))
         return res.status(400).send({ status: false, message: "street field is required or not valid" })
@@ -120,16 +144,7 @@ const createUser = async function (req, res) {
     const hashedPassword = await bcrypt.hash(data.password, salt)
     data.password = hashedPassword
     
-    //===========================================UPLOADING PROFILE IMAGE==============================================
-    let file = req.files
-    if (file && file.length > 0) 
-    {
-    //upload to s3 and get the uploaded link
-    // res.send the link back to frontend/postman
-    let uploadedFileURL = await uploadFile(file[0])
-    data['profileImage'] = uploadedFileURL
-    
-    }
+   
   //===========================================CREATING DOCUMENT==============================================
   let createData = await userModel.create(data)
   res.send({status:true,data:createData})
@@ -324,14 +339,18 @@ const updateUser = async function (req, res) {
 
         let userAddress = await userModel.findById(userId)
         filter.address = userAddress.address
+       
+        address = JSON.parse(address)
 
         if (address) {
-            // if(!validation.isValidObject(address)){
+            if(!validation.isValidObject(address)){
+                return res.status(400).send({ status: false, message: "please provide address in proper format" })
+            }
+            // if (address.shipping){
+            //     if(!validation.isValidObject(address.shipping)){
             //     return res.status(400).send({ status: false, message: "please provide address in proper format" })
-            // }
-
-            address = JSON.parse(address)
-
+            // }}
+            
             if (address.shipping) {
 
                 if (address.shipping.hasOwnProperty("street")) {
