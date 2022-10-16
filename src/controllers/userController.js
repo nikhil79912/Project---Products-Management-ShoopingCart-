@@ -48,12 +48,12 @@ const createUser = async function (req, res) {
 
     if (!validation.isValidRequestBody(data))
         return res.status(400).send({ status: false, msg: "please provide  details" })
-    
+
     //============================================NAME====================================================    
     if (!validation.isValid(fname))
         return res.status(400).send({ status: false, message: "first name is required or not valid" })
 
-        if (!validation.isValidName(fname))
+    if (!validation.isValidName(fname))
         return res.status(400).send({ status: false, message: "first name is not valid" })
 
 
@@ -75,18 +75,18 @@ const createUser = async function (req, res) {
 
     if (checkEmail) return res.status(409).send({ status: false, msg: "This email has already been registered" })
 
-     //===========================================UPLOADING PROFILE IMAGE==============================================
-     let file = req.files
-     if (file && file.length > 0) 
-     {
-     //upload to s3 and get the uploaded link
-     // res.send the link back to frontend/postman
-     let uploadedFileURL = await uploadFile(file[0])
-     data['profileImage'] = uploadedFileURL
-     
-     if(!validation.isValidImage(uploadedFileURL)){return res.status(400).send({ status: false, message: "please provide profile Image in jpg,png,jpeg format" })}}
-       
-     else{return res.status(400).send({ status: false, message: "please select a profile Image" })}
+    //===========================================UPLOADING PROFILE IMAGE==============================================
+    let file = req.files
+    if (file && file.length > 0) {
+        //upload to s3 and get the uploaded link
+        // res.send the link back to frontend/postman
+        let uploadedFileURL = await uploadFile(file[0])
+        data['profileImage'] = uploadedFileURL
+
+        if (!validation.isValidImage(uploadedFileURL)) { return res.status(400).send({ status: false, message: "please provide profile Image in jpg,png,jpeg format" }) }
+    }
+
+    else { return res.status(400).send({ status: false, message: "please select a profile Image" }) }
 
     //===========================================PHONE=================================================
     if (!validation.isValid(phone))
@@ -107,11 +107,11 @@ const createUser = async function (req, res) {
     if (!validation.isValidPassword(password))
         return res.status(400).send({ status: false, message: "Password length should be 8 to 15 digits and enter atleast one uppercase or lowercase" })
 
-    
-   //===========================================ADDRESS==============================================
+
+    //===========================================ADDRESS==============================================
     if (!address) return res.status(400).send({ status: false, msg: "address requried" })
     // var addresss = JSON.parse(address)
-    
+
 
     if (!validation.isValid(address.shipping.street))
         return res.status(400).send({ status: false, message: "street field is required or not valid" })
@@ -125,7 +125,7 @@ const createUser = async function (req, res) {
     if (!validation.isValidPincode(address.shipping.pincode))
         return res.status(400).send({ status: false, message: "PIN code should contain 6 digits only " })
 
-    if (!address.billing)return res.status(400).send({ status: false, message: "billing field is required or not valid" })
+    if (!address.billing) return res.status(400).send({ status: false, message: "billing field is required or not valid" })
 
     if (!validation.isValid(address.billing.street))
         return res.status(400).send({ status: false, message: "street field is required or not valid" })
@@ -143,13 +143,13 @@ const createUser = async function (req, res) {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(data.password, salt)
     data.password = hashedPassword
-    
-   
-  //===========================================CREATING DOCUMENT==============================================
-  let createData = await userModel.create(data)
-  res.send({status:true,data:createData})
 
-}   
+
+    //===========================================CREATING DOCUMENT==============================================
+    let createData = await userModel.create(data)
+    res.send({ status: true, data: createData })
+
+}
 
 
 //-------------------------------------------------login User/post(login) ------------------------------------------
@@ -195,10 +195,10 @@ const loginUser = async function (req, res) {
             });
         }
         if (!validation.isValidPassword(password)) {
-          return res.status(400).send({
-            status: false,
-            message: "Please enter a valid password"
-          });
+            return res.status(400).send({
+                status: false,
+                message: "Please enter a valid password"
+            });
         }
 
         let user = await userModel.findOne({ email: email })
@@ -209,7 +209,7 @@ const loginUser = async function (req, res) {
         let userPass = user.password
         let checkPass = await bcrypt.compare(password, userPass)
         if (!checkPass) { return res.status(400).send({ status: false, message: "Invalid password" }) }
-        
+
         //---------------- token creation--------------
 
         let token = jwt.sign(
@@ -246,7 +246,7 @@ const getUser = async function (req, res) {
         if (!user)
             return res.status(400).send({ status: false, message: "user does not exist" })
 
-            return res.status(200).send({ status: true, msssage: "user profile Details", data: user })
+        return res.status(200).send({ status: true, msssage: "user profile Details", data: user })
 
 
 
@@ -339,70 +339,73 @@ const updateUser = async function (req, res) {
 
         let userAddress = await userModel.findById(userId)
         filter.address = userAddress.address
-       
-        address = JSON.parse(address)
 
         if (address) {
-            if(!validation.isValidObject(address)){
+            try {
+                address = JSON.parse(address)
+
+                if (address.shipping) {
+
+                    if (address.shipping.hasOwnProperty("street")) {
+                        if (!validation.isValid(address.shipping.street)) {
+                            return res.status(400).send({ status: false, message: "please provide street in proper format" })
+                        }
+                        filter.address.shipping.street = address.shipping.street
+                    }
+
+                    if (address.shipping.hasOwnProperty("city")) {
+                        if (!validation.isValid(address.shipping.city)) {
+                            return res.status(400).send({ status: false, message: "please provide city in proper format" })
+                        }
+                        if (!validation.isValidName(address.shipping.city)) {
+                            return res.status(400).send({ status: false, message: "please provide only alphabet in city" })
+                        }
+                        filter.address.shipping.city = address.shipping.city
+                    }
+
+                    if (address.shipping.hasOwnProperty("pincode")) {
+                        if (!validation.isValid(address.shipping.pincode)) {
+                            return res.status(400).send({ status: false, message: "please provide pincode in proper format" })
+                        }
+                        if (!validation.isValidPincode(address.shipping.pincode)) {
+                            return res.status(400).send({ status: false, message: "please provide only 6 digit pincode" })
+                        }
+                        filter.address.shipping.pincode = address.shipping.pincode
+                    }
+                }
+
+                if (address.billing) {
+
+                    if (address.billing.hasOwnProperty("street")) {
+                        if (!validation.isValid(address.billing.street)) {
+                            return res.status(400).send({ status: false, message: "please provide street in proper format" })
+                        }
+                        filter.address.billing.street = address.billing.street
+                    }
+
+                    if (address.billing.hasOwnProperty("city")) {
+                        if (!validation.isValid(address.billing.city)) {
+                            return res.status(400).send({ status: false, message: "please provide city in proper format" })
+                        }
+                        if (!validation.isValidName(address.billing.city)) {
+                            return res.status(400).send({ status: false, message: "please provide only alphabet in city" })
+                        }
+                        filter.address.billing.city = address.billing.city
+                    }
+
+                    if (address.billing.hasOwnProperty("pincode")) {
+                        if (!validation.isValid(address.billing.pincode)) {
+                            return res.status(400).send({ status: false, message: "please provide pincode in proper format" })
+                        }
+                        if (!validation.isValidPincode(address.billing.pincode)) {
+                            return res.status(400).send({ status: false, message: "please provide only 6 digit pincode" })
+                        }
+                        filter.address.billing.pincode = address.billing.pincode
+                    }
+                }
+            }
+            catch {
                 return res.status(400).send({ status: false, message: "please provide address in proper format" })
-            }
-            // if (address.shipping){
-            //     if(!validation.isValidObject(address.shipping)){
-            //     return res.status(400).send({ status: false, message: "please provide address in proper format" })
-            // }}
-            
-            if (address.shipping) {
-
-                if (address.shipping.hasOwnProperty("street")) {
-                    if (!validation.isValid(address.shipping.street)) {
-                        return res.status(400).send({ status: false, message: "please provide street in proper format" })
-                    }
-                    filter.address.shipping.street = address.shipping.street
-                }
-
-                if (address.shipping.hasOwnProperty("city")) {
-                    if (!validation.isValid(address.shipping.city)) {
-                        return res.status(400).send({ status: false, message: "please provide city in proper format" })
-                    }
-                    filter.address.shipping.city = address.shipping.city
-                }
-
-                if (address.shipping.hasOwnProperty("pincode")) {
-                    if (!validation.isValid(address.shipping.pincode)) {
-                        return res.status(400).send({ status: false, message: "please provide pincode in proper format" })
-                    }
-                    if (!validation.isValidPincode(address.shipping.pincode)) {
-                        return res.status(400).send({ status: false, message: "please provide only 6 digit pincode" })
-                    }
-                    filter.address.shipping.pincode = address.shipping.pincode
-                }
-            }
-
-            if (address.billing) {
-
-                if (address.billing.hasOwnProperty("street")) {
-                    if (!validation.isValid(address.billing.street)) {
-                        return res.status(400).send({ status: false, message: "please provide street in proper format" })
-                    }
-                    filter.address.billing.street = address.billing.street
-                }
-
-                if (address.billing.hasOwnProperty("city")) {
-                    if (!validation.isValid(address.billing.city)) {
-                        return res.status(400).send({ status: false, message: "please provide city in proper format" })
-                    }
-                    filter.address.billing.city = address.billing.city
-                }
-
-                if (address.billing.hasOwnProperty("pincode")) {
-                    if (!validation.isValid(address.billing.pincode)) {
-                        return res.status(400).send({ status: false, message: "please provide pincode in proper format" })
-                    }
-                    if (!validation.isValidPincode(address.billing.pincode)) {
-                        return res.status(400).send({ status: false, message: "please provide only 6 digit pincode" })
-                    }
-                    filter.address.billing.pincode = address.billing.pincode
-                }
             }
         }
 

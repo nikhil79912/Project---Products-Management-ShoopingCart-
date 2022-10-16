@@ -22,6 +22,9 @@ router.put("/user/:userId/profile",auth.authentication, auth.authorization, user
 //------------ get product by product ID -----------
 router.get("/products/:productId" ,ProductController.getProductById)
 
+//--------------update product by product ID-------
+router.put("/products/:productId", auth.authentication, auth.authorization, ProductController.updateProduct)
+
 //--------------delete  product by product ID-------
 router.delete("/products/:productId" ,ProductController.deleteProductById)
 
