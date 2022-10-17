@@ -7,6 +7,8 @@ const auth = require("../auth/auth")
 const ProductController = require('../controllers/productController')
 //-------------------------------------------------------------------------------------------------------------
 
+//===============================================FEATURE I=============================================================
+
 //------------ user registration -----------------
 router.post("/register", userController.createUser);
 
@@ -16,8 +18,16 @@ router.post("/login", userController.loginUser);
 //------------ get user by user ID ----------------
 router.get("/user/:userId/profile",auth.authentication,userController.getUser)
 
-//----------------- update books ------------------
+//----------------- update User profile ------------------
 router.put("/user/:userId/profile",auth.authentication, auth.authorization, userController.updateUser)
+
+//===============================================FEATURE II=============================================================
+
+//----------------create product--------------------------
+router.post("/products", ProductController.createProduct);
+
+//------------ get product  -----------
+router.get("/products",ProductController.productDetail)
 
 //------------ get product by product ID -----------
 router.get("/products/:productId" ,ProductController.getProductById)
