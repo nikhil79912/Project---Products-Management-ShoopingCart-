@@ -8,7 +8,15 @@ const aws = require('aws-sdk')
 // const jwt = require('jsonwebtoken')
 const productModel = require('../models/productModel')
 
-//-----------------------------------------------------AWS---------------------------------------------------------------
+
+const mongoose = require('mongoose')
+const bcrypt = require("bcrypt");
+
+const jwt = require('jsonwebtoken')
+
+
+
+
 aws.config.update({
     accessKeyId: "AKIAY3L35MCRZNIRGT6N",
     secretAccessKey: "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",
@@ -38,6 +46,176 @@ let uploadFile = async (file) => {
 
     })
 }
+
+
+
+let createProduct = async function(req,res){
+let data = req.body
+let{title,description,price,currencyId,currencyFormat,isFreeShipping,productImage, style,availableSizes,installments,deletedAt,  isDeleted}= data
+
+
+
+
+// title
+if(!title){return res.status(400).send({status:false, msg:"Please mention title"})}
+let findTitle = await productModel.findOne({title:title})
+if(findTitle){return res.status(400).send({status:false,msg:"this title already exists"})}
+
+//description
+if(!description){return res.status(400).send({status:false, msg:"Please mention description"})}
+
+//price
+if(!price){return res.status(400).send({status:false, msg:"please mention price"})}
+
+//currencyId
+if(!currencyId){return res.status(400).send({status:false,msg:"Please mention currencyId"})}
+if(currencyId !=="INR"){res.status(400).send({status:false,msg:"currencyId must be INR"})}
+req.body.currencyFormat = "₹"
+//currencyFormat
+//if(!currencyFormat){return res.status(400).send({status:false,msg:"Please mention currencyFormat '₹'"}) }
+
+//productImage
+if(!productImage){return res.status(404).send({status:false, msg:"mention productImage"})}
+
+//availableSizes
+
+ 
+
+if(!availableSizes){return res.status(400).send({status:false,msg:"please mention available sizes"})}
+let check = ["S", "XS", "M", "X", "L", "XXL", "XL"]
+
+
+ //availableSizes = availableSizes.split(',')
+
+
+//console.log(checkEnum)
+
+/*
+for(let i =0;i<availableSizes.length;i++){
+if(check.includes(availableSizes[i])== false)
+{return res.status(400).send({status:false,msg:'available sizes are ["S", "XS", "M", "X", "L", "XXL", "XL"]'})}
+
+}
+*/
+
+ 
+
+
+
+    let files= req.files
+      if(files && files.length>0){
+         let uploadedFileURL= await uploadFile( files[0] ) 
+
+      data.productImage = uploadedFileURL
+
+
+      let createData = await productModel.create(data)
+     // console.log(createData)
+
+      res.send({status:true, data:createData})
+
+      }
+
+    }
+
+//-----------------------------------------------------GET /products---------------------------------------------------------------
+
+let productDetail = async function (req, res) {
+    try {
+
+        let data = req.query
+        let fdata = {}
+        fdata["isDeleted"] = false
+        if (Object.keys(data).length === 0) return res.status(400).send({ status: false, message: "please use any filter to get product" })
+
+
+        let { Size, name, price, priceSort, ...rest } = data
+        if (Object.keys(rest).length > 0) return res.status(400).send({ ststus: false, message: "try (name, size and price,priceSort) to get product detail" })
+
+        if (Size) {
+            Size = Size.trim()
+            let size1 = Size.split(",").map(ele => ele.toUpperCase())
+            for (let i = 0; i < size1.length; i++) {
+                if (!Size.includes(size1[i])) return res.status(400).send({ status: false, message: "please use correct Size" })
+            }
+            // if (!isValid(Size)) return res.status(400).send({ status: false, message: "please use size" })
+            // if (!validSize(Size)) return res.status(400).send({ status: false, message: "size contain only ( S, XS, M, X, L, XXL, XL ) " })
+            fdata["availableSizes"] = { $in: size1 }
+        }
+
+        if (name) {
+            name = name.trim()
+            if (!isValid(name)) return res.status(400).send({ status: false, message: "use correct formet " })
+            // let findData= await productModel.find()
+            // if(findData.title.includes(name)==true) 
+            let regex = new RegExp(name, "i")
+            fdata["title"] = { $regex: regex }
+        }
+
+
+        if (price) {
+            let check = JSON.parse(price)
+            console.log(check)
+            if (Object.keys(check).length == 0) return res.status(400).send({ status: false, message: 'plz enter price fliter..' })
+
+            if (check.priceGreaterThan) {
+                fdata['price'] = { $gt: check.priceGreaterThan }
+            }
+
+            if (check.priceLessThan) {
+                fdata['price'] = { $lt: check.priceLessThan }
+            }
+
+            if (check.priceGreaterThan && check.priceLessThan) {
+                fdata['price'] = { $gt: check.priceGreaterThan, $lt: check.priceLessThan }
+            }
+
+            console.log(price)
+            // price = JSON.parse(price)
+        }
+        let sort = {}
+
+        if (priceSort) {
+            if (!(priceSort == 1 || priceSort == -1)) return res.status(400).send({ status: false, message: 'plz give correct value for sotring ex=>  for:- ascending:1 & descending :-1' })
+            sort['price'] = priceSort
+        }
+
+        const products = await productModel.find(fdata).sort(sort)
+        //if (!Object.keys(products)>=0) return res.status(400).send({ status: false, message: "no data found" })
+        return res.status(200).send({ status: true, message: 'Success', count: products.length, data: products })
+    } catch (error) {
+    }
+}
+//-----------------------------------------------------AWS---------------------------------------------------------------
+// aws.config.update({
+//     accessKeyId: "AKIAY3L35MCRZNIRGT6N",
+//     secretAccessKey: "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",
+//     region: "ap-south-1"
+// })
+
+// let uploadFile = async (file) => {
+//     return new Promise(function (resolve, reject) {
+//         // this function will upload file to aws and return the link
+//         let s3 = new aws.S3({ apiVersion: '2006-03-01' }); // we will be using the s3 service of aws
+
+//         var uploadParams = {
+//             ACL: "public-read",
+//             Bucket: "classroom-training-bucket",  //HERE
+//             Key: "abc/" + file.originalname, //HERE 
+//             Body: file.buffer
+//         }
+
+
+//         s3.upload(uploadParams, function (err, data) {
+//             if (err) {
+//                 return reject({ "error": err })
+//             }
+//             return resolve(data.Location)
+//         })
+
+
+//     })
+// }
 
 
 //------------------------------------------ get("/products/:productId")-----------------------------------------
@@ -206,5 +384,5 @@ const updateProduct = async function (req, res) {
 //------------------------------export modules--------------------------------------------------------------------
 
 
-module.exports={ getProductById, deleteProductById, updateProduct }
+module.exports={ getProductById, deleteProductById, updateProduct , productDetail,createProduct}
 
