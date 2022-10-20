@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 
-
 const isValidObjectId = function (objectId) {
     return mongoose.Types.ObjectId.isValid(objectId)
 }
@@ -48,7 +47,7 @@ const isValidPincode = function (value) {
 }
 
 function isValidImage(icon) {
-    const ext = [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".svg", "PNG"]
+    const ext = [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".svg", ".PNG"]
     return ext.some((el) => icon.endsWith(el))
 }
 
@@ -58,10 +57,9 @@ const hashPassword = async (password) => {
     // console.log(await bcrypt.compare(password, hash))
 }
 
-const isSize = function (title) {
-    //console.log(['Mr','Mrs','Miss'].includes(title));
-    return ["S", "XS", "M", "X", "L", "XXL", "XL"].includes(title.toUpperCase())
-}
+// const isSize = function (title) {
+//     return ["S", "XS", "M", "X", "L", "XXL", "XL"].includes(title.toUpperCase())
+// }
 
 const isValidPrice = function (value) {
     if (/^\d+(\.\d{1,2})?$/.test(value)) return true
@@ -76,25 +74,20 @@ const isValidNum = function (value) {
 }
 
 const isValidBoolean = function (value) {
-    return value === "true" || value === "false" || value === true || value === false || value === "TRUE" || value === "FALSE" || value === TRUE || value === FALSE
+    return value === "true" || value === "false" || value === true || value === false
 }
 
-const isValidSize = (Arr) => {
-    let newArr = []
-    if (Arr.length === 0) {
-        return false
-    }
-    let brr = Arr[0].split(",")
-    for (let i = 0; i < brr.length; i++) {
-        if (
-            !["S", "XS", "M", "X", "L", "XXL", "XL"].includes(brr[i].toUpperCase())
-        ) {
-            return false
-        }
-        newArr.push(brr[i].toUpperCase())
-    }
-    return newArr
-}
+const isValidSize=function(arrayOfSize){
+    let size1 = ["S", "XS", "M", "X", "L", "XXL", "XL"];
+            let size2 = arrayOfSize.toUpperCase().split(",").map((x) => x.trim())
+            for (let i = 0; i < size2.length; i++) {
+                if (!size1.includes(size2[i])) {
+                    return false
+                }
+          }
+     return true
+ }
+
 
 const isValidStatus = function (status) {
     let enumArr = ["pending", "completed", "cancelled"]
@@ -102,4 +95,4 @@ const isValidStatus = function (status) {
 }
 
 
-module.exports = { isValidObjectId, isValidRequestBody, isValidObject, isValid, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPincode, isValidImage, hashPassword, isSize, isValidPrice, isValidNum, isValidBoolean, isValidSize, isValidStatus }
+module.exports = { isValidObjectId, isValidRequestBody, isValidObject, isValid, isValidName, isValidEmail, isValidPhone, isValidPassword, isValidPincode, isValidImage, hashPassword, isValidPrice, isValidNum, isValidBoolean, isValidSize, isValidStatus }

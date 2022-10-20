@@ -38,7 +38,7 @@ const authorization = async function (req, res, next) {
 
         const checkUserId = await userModel.findById(userId)
         if (!checkUserId) {
-            return res.status(400).send({ status: false, message: "User ID not found, please use another user ID" })
+            return res.status(404).send({ status: false, message: "User ID not found, please use another user ID" })
         }
 
         if (userId != decodedToken.userId) {

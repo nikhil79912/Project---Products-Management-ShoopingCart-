@@ -5,7 +5,6 @@ const validation = require("../validations/validation")
 
 const createOrder = async function (req, res) {
     try {
-        let filter = {}
         const userId = req.params.userId
         const data = req.body
         const { cartId, cancellable, ...rest } = data
@@ -14,8 +13,8 @@ const createOrder = async function (req, res) {
             return res.status(400).send({ status: false, message: "please provide some details" })
         }
 
-        if(validation.isValidRequestBody(rest)){
-            return res.status(400).send({status: false, message: 'only cart ID is needed and cancellable is optional '})
+        if (validation.isValidRequestBody(rest)) {
+            return res.status(400).send({ status: false, message: 'only cart ID is needed and cancellable is optional ' })
         }
 
         if (!cartId) {
@@ -25,16 +24,17 @@ const createOrder = async function (req, res) {
             return res.status(400).send({ status: false, message: "Cart ID is not valid, please enter correct cart ID" })
         }
 
-        const checkCart = await cartModel.findOne({ _id: cartId, userId: userId }).select({ _id: 0, items: 1, totalPrice: 1, totalItems: 1})
+        const checkCart = await cartModel.findOne({ _id: cartId, userId: userId }).select({ _id: 0, items: 1, totalPrice: 1, totalItems: 1 })
 
         if (!checkCart) {
             return res.status(404).send({ status: false, message: "Cart ID not found, please use correct cart ID" })
         }
 
-        if(checkCart.items.length == 0){
+        if (checkCart.items.length == 0) {
             return res.status(404).send({ status: false, message: "product not found in the cart, please add product to placed order" })
         }
 
+        let filter = {}
         filter.userId = userId
         filter.items = checkCart.items
         filter.totalPrice = checkCart.totalPrice
@@ -42,35 +42,33 @@ const createOrder = async function (req, res) {
 
         let tempArray = checkCart.items.map(x => x.quantity)
 
+        console.log(tempArray);
         let quantitySum = 0
-        for(let i=0; i<tempArray.length; i++){
+        for (let i = 0; i < tempArray.length; i++) {
             quantitySum = quantitySum + tempArray[i]
         }
-        
+
         filter.totalQuantity = quantitySum
 
-        if(cancellable){
-            if(!validation.isValidBoolean(cancellable)){
+        if (cancellable) {
+            if (!validation.isValidBoolean(cancellable)) {
                 return res.status(400).send({ status: false, message: "please provide only boolean value (true or false) in cancellable " })
             }
-            
+
             filter.cancellable = JSON.parse(cancellable.toLowerCase())
-        }else{
+        } else {
             filter.cancellable = true
         }
 
         filter.status = 'pending'
 
         const create = await orderModel.create(filter)
-        res.status(201).send({ status: true, message: "Success", data: create})
+        res.status(201).send({ status: true, message: "Success", data: create })
 
     } catch (error) {
         return res.status(500).send({ status: false, message: error.message })
     }
-
-
 }
-
 
 
 const updateOrder = async function (req, res) {
