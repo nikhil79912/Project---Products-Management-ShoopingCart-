@@ -1,13 +1,12 @@
-//-------------------------------------------------importing module---------------------------------------------------
-
 const express = require("express");
 const router = express.Router();
+const auth = require("../middleware/auth")
 const userController = require("../controllers/userController");
-const auth = require("../auth/auth")
-const ProductController = require('../controllers/productController')
-//-------------------------------------------------------------------------------------------------------------
+const productController = require('../controllers/productController')
+const cartController = require('../controllers/cartController')
+const orderController = require('../controllers/orderController')
 
-//===============================================FEATURE I=============================================================
+//=============================================USER==============================================
 
 //------------ user registration -----------------
 router.post("/register", userController.createUser);
@@ -16,32 +15,50 @@ router.post("/register", userController.createUser);
 router.post("/login", userController.loginUser);
 
 //------------ get user by user ID ----------------
-router.get("/user/:userId/profile",auth.authentication,userController.getUser)
+router.get("/user/:userId/profile", auth.authentication, userController.getUser)
 
 //----------------- update User profile ------------------
-router.put("/user/:userId/profile",auth.authentication, auth.authorization, userController.updateUser)
+router.put("/user/:userId/profile", auth.authentication, auth.authorization, userController.updateUser)
 
-//===============================================FEATURE II=============================================================
+
+//==========================================PRODUCT==============================================
 
 //----------------create product--------------------------
-router.post("/products", ProductController.createProduct);
+router.post("/products", productController.createProduct);
 
 //------------ get product  -----------
-router.get("/products",ProductController.productDetail)
+router.get("/products", productController.productDetail)
 
 //------------ get product by product ID -----------
-router.get("/products/:productId" ,ProductController.getProductById)
+router.get("/products/:productId", productController.getProductById)
 
 //--------------update product by product ID-------
-router.put("/products/:productId", auth.authentication, auth.authorization, ProductController.updateProduct)
+router.put("/products/:productId", productController.updateProduct)
 
 //--------------delete  product by product ID-------
-router.delete("/products/:productId" ,ProductController.deleteProductById)
-
-//------------ edge case for wrong route------------
-router.all("/*",(req,res)=>{res.status(400).send({status:false,message:"Endpoint is not correct"})})
+router.delete("/products/:productId", productController.deleteProductById)
 
 
-//-------------------------------------------------exporting router---------------------------------------------------
+//==========================================CART==============================================
 
-module.exports = router;
+//----------------create cart--------------------------
+router.post("/users/:userId/cart", auth.authentication, auth.authorization, cartController.createCart)
+
+//--------------update cart by user ID-------
+router.put("/users/:userId/cart", auth.authentication, auth.authorization, cartController.updateCart)
+
+//--------------get cart by user ID-------
+router.get("/users/:userId/cart", auth.authentication, auth.authorization, cartController.getCart)
+
+//--------------delete cart by user ID-------
+router.delete("/users/:userId/cart", auth.authentication, auth.authorization, cartController.deleteCart)
+
+
+//==========================================ORDER==============================================
+
+router.post("/users/:userId/orders", auth.authentication, auth.authorization, orderController.createOrder)
+
+router.put("/users/:userId/orders", auth.authentication, auth.authorization, orderController.updateOrder)
+
+
+module.exports = router

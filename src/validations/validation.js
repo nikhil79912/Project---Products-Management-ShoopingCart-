@@ -48,7 +48,7 @@ const isValidPincode = function (value) {
 }
 
 function isValidImage(icon) {
-    const ext = [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".svg"]
+    const ext = [".jpg", ".jpeg", ".bmp", ".gif", ".png", ".svg", "PNG"]
     return ext.some((el) => icon.endsWith(el))
 }
 
@@ -76,7 +76,7 @@ const isValidNum = function (value) {
 }
 
 const isValidBoolean = function (value) {
-    return value === "true" || value === "false"
+    return value === "true" || value === "false" || value === true || value === false || value === "TRUE" || value === "FALSE" || value === TRUE || value === FALSE
 }
 
 const isValidSize = (Arr) => {
