@@ -32,8 +32,21 @@ let createProduct = async function (req, res) {
 
         //currencyId
         if (!currencyId) { return res.status(400).send({ status: false, msg: "Please mention currencyId" }) }
-        if (currencyId !== "INR") { res.status(400).send({ status: false, msg: "currencyId must be INR" }) }
-        req.body.currencyFormat = "₹"
+
+        if (currencyId) {
+            currencyId = currencyId.toUpperCase()
+            if (!(currencyId == "INR" || (currencyId == "USD"))) {
+                return res.status(400).send({ status: false, msg: "currencyId must be INR or USD" })
+            }
+        }
+
+        if (currencyId == "INR") {
+            req.body.currencyFormat = "₹"
+        }
+
+        if (currencyId == "USD") {
+            req.body.currencyFormat = "$"
+        }
 
 
         //productImage
@@ -49,7 +62,7 @@ let createProduct = async function (req, res) {
 
         if (!availableSizes) { return res.status(400).send({ status: false, msg: "please mention available sizes" }) }
 
-        const sizeArr = availableSizes.split(",").map((x) => x.trim());
+        const sizeArr = availableSizes.toUpperCase().split(",").map((x) => x.trim());
         data.availableSizes = sizeArr;
 
         //--------------checking the array that given size is valid or invalid-------------------------------------
@@ -73,7 +86,7 @@ let createProduct = async function (req, res) {
             let createData = await productModel.create(data)
             // console.log(createData)
 
-            res.status(201).send({ status: true, message: "Success", data: createData })
+            return res.status(201).send({ status: true, message: "Success", data: createData })
 
         }
     }
@@ -130,7 +143,7 @@ let productDetail = async function (req, res) {
             for (let i = 0; i < size1.length; i++) {
                 if (!size.includes(size1[i])) return res.status(400).send({ status: false, message: "please use correct Size" })
             }
-            
+
             fdata["availableSizes"] = { $in: size1 }
         }
 
@@ -171,7 +184,7 @@ let productDetail = async function (req, res) {
 
         const products = await productModel.find(fdata).sort(sort)
         return res.status(200).send({ status: true, message: 'Success', count: products.length, data: products })
-    } 
+    }
     catch (error) {
     }
 }
@@ -251,14 +264,19 @@ const updateProduct = async function (req, res) {
     }
 
     if (data.hasOwnProperty("currencyId")) {
-        if (!validation.isValid(currencyId)) {
-            return res.status(400).send({ status: false, message: "please provide currencyId in proper format" })
-        }
-
-        if (!validation.isValidName(currencyId)) {
-            return res.status(400).send({ status: false, message: "please provide only alphabet in currencyId" })
+        currencyId = currencyId.toUpperCase()
+        if (!(currencyId == "INR" || (currencyId == "USD"))) {
+            return res.status(400).send({ status: false, msg: "currencyId must be INR or USD" })
         }
         filter.currencyId = currencyId.toUpperCase()
+
+        if (currencyId == "INR") {
+            filter.currencyFormat = "₹"
+        }
+
+        if (currencyId == "USD") {
+            filter.currencyFormat = "$"
+        }
     }
 
     if (data.hasOwnProperty("currencyFormat")) {
