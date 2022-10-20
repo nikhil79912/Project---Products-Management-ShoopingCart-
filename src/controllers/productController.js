@@ -47,76 +47,80 @@ let uploadFile = async (file) => {
     })
 }
 
-
-
 let createProduct = async function(req,res){
-let data = req.body
-let{title,description,price,currencyId,currencyFormat,isFreeShipping,productImage, style,availableSizes,installments,deletedAt,  isDeleted}= data
+    try{
+    let data = req.body
+    let{title,description,price,currencyId,currencyFormat,isFreeShipping,productImage, style,availableSizes,installments,deletedAt,  isDeleted}= data
+    
+    
+    if(!validation.isValidRequestBody(data)){return res.status(400).send({status:false,msg:"please provide Data"})}
+    
+    
+    // title
+    if(!title){return res.status(400).send({status:false, msg:"Please mention title"})}
+    let findTitle = await productModel.findOne({title:title})
+    if(findTitle){return res.status(400).send({status:false,msg:"this title already exists"})}
+    
+    //description
+    if(!description){return res.status(400).send({status:false, msg:"Please mention description"})}
+    
+    //price
+    if(!price){return res.status(400).send({status:false, msg:"please mention price"})}
+    if(!validation.isValidPrice(price) || !validation.isValidNum(price)){return res.status(400).send({status:false,msg:"not valid entry"})}
+    
+    
+    //currencyId
+    if(!currencyId){return res.status(400).send({status:false,msg:"Please mention currencyId"})}
+    if(currencyId !=="INR"){res.status(400).send({status:false,msg:"currencyId must be INR"})}
+    req.body.currencyFormat = "₹"
+    
+    
+    //productImage
+    if(!productImage){return res.status(404).send({status:false, msg:"mention productImage"})}
+    
+    
+    //availableSizes
+    
+    if(!availableSizes){return res.status(400).send({status:false,msg:"please mention available sizes"})}
+    
+    const sizeArr = availableSizes.split(",").map((x) => x.trim());
+            data.availableSizes = sizeArr;
+    
+    //--------------checking the array that given size is valid or invalid-------------------------------------
+          if (Array.isArray(sizeArr)) {
+            for (let i = 0; i < sizeArr.length; i++) {
+                if (["S", "XS", "M", "X", "L", "XXL", "XL"].indexOf(sizeArr[i])==-1)
+                    return res.status(400).send({ status: false, message: "Please Enter valid sizes, it should include only sizes from  (S,XS,M,X,L,XXL,XL) " })
+            }
+        };   
+    
+    
+    // deletedAt
+    if(isDeleted == false){return deletedAt="null"}
+    
+    
+        let files= req.files
+       // if(!validation. isValidImage(files)){return res.status(400).send({status:false,msg:"pic format is not valid"})}
+        if(files && files.length>0){
+             let uploadedFileURL= await uploadFile( files[0] ) 
+    
+          data.productImage = uploadedFileURL
+    
+    
+          let createData = await productModel.create(data)
+         // console.log(createData)
+    
+          res.status(201).send({status:true, data:createData})
+    
+          }}
+          catch(err){
+            return res.status(500).send({status:false,msg:err.message})
+          }
+    
+        }
 
 
 
-
-// title
-if(!title){return res.status(400).send({status:false, msg:"Please mention title"})}
-let findTitle = await productModel.findOne({title:title})
-if(findTitle){return res.status(400).send({status:false,msg:"this title already exists"})}
-
-//description
-if(!description){return res.status(400).send({status:false, msg:"Please mention description"})}
-
-//price
-if(!price){return res.status(400).send({status:false, msg:"please mention price"})}
-
-//currencyId
-if(!currencyId){return res.status(400).send({status:false,msg:"Please mention currencyId"})}
-if(currencyId !=="INR"){res.status(400).send({status:false,msg:"currencyId must be INR"})}
-req.body.currencyFormat = "₹"
-//currencyFormat
-//if(!currencyFormat){return res.status(400).send({status:false,msg:"Please mention currencyFormat '₹'"}) }
-
-//productImage
-if(!productImage){return res.status(404).send({status:false, msg:"mention productImage"})}
-
-//availableSizes
-
- 
-
-if(!availableSizes){return res.status(400).send({status:false,msg:"please mention available sizes"})}
-let check = ["S", "XS", "M", "X", "L", "XXL", "XL"]
-
-
- //availableSizes = availableSizes.split(',')
-
-
-//console.log(checkEnum)
-
-/*
-for(let i =0;i<availableSizes.length;i++){
-if(check.includes(availableSizes[i])== false)
-{return res.status(400).send({status:false,msg:'available sizes are ["S", "XS", "M", "X", "L", "XXL", "XL"]'})}
-
-}
-*/
-
- 
-
-
-
-    let files= req.files
-      if(files && files.length>0){
-         let uploadedFileURL= await uploadFile( files[0] ) 
-
-      data.productImage = uploadedFileURL
-
-
-      let createData = await productModel.create(data)
-     // console.log(createData)
-
-      res.send({status:true, data:createData})
-
-      }
-
-    }
 
 //-----------------------------------------------------GET /products---------------------------------------------------------------
 
