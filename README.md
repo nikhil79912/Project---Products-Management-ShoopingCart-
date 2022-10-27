@@ -90,8 +90,8 @@
 > **_NOTE:_** There is a slight change in response body. You should also return userId in addition to the JWT token.
 - __Response format__
   - _**On success**_ - Return HTTP status 200 and JWT token in response body. The response should be a JSON object like [this](#successful-response-structure)
-  - _**On error**_ - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like [this](#error-response-structure)
-```yaml
+  - _**On error**_ - a suitable error message with a valid HTTP status code. The response should be a JSON object like [this](#error-response-structure)
+```yaml Return
 {
     "status": true,
     "message": "User login successfull",
@@ -224,7 +224,7 @@ Send [form-data](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
     - Sorted by product price in ascending or descending. The key value pair will look like {priceSort : 1} or {priceSort : -1}
   _eg_ /products?size=XL&name=Nit%20grit
 - __Response format__
-  - _**On success**_ - Return HTTP status 200. Also return the product documents. The response should be a JSON object like [this](#successful-response-structure)
+  - _**On success**_ - Return HTTP status 200. Also return the product   documents. The response should be a JSON object like [this](#successful-response-structure)
   - _**On error**_ - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like [this](#error-response-structure)
 
 ### GET /products/:productId
@@ -303,7 +303,7 @@ Send [form-data](https://developer.mozilla.org/en-US/docs/Web/API/FormData)
 - Make sure the user exist
 - Get product(s) details in response body.
 - __Response format__
-  - _**On success**_ - Return HTTP status 200. Return the cart document. The response should be a JSON object like [this](#successful-response-structure)
+  - _**On success**_ - Return HTTP status 200. Return the cart docum ent. The response should be a JSON object like [this](#successful-response-structure)
   - _**On error**_ - Return a suitable error message with a valid HTTP status code. The response should be a JSON object like [this](#error-response-structure)
 
 ### DELETE /users/:userId/cart

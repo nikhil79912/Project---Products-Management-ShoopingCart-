@@ -16,7 +16,7 @@ const createCart = async function (req, res) {
         if (!validation.isValidObjectId(productId)) {
             return res.status(400).send({ status: false, message: "Product ID is not valid, please enter correct product ID" })
         }
-
+            
         const checkProductId = await productModel.findOne({ _id: productId, isDeleted: false })
         if (!checkProductId) {
             return res.status(404).send({ status: false, message: "Product ID not found, please use another product ID" })
